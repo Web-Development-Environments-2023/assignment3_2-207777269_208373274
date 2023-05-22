@@ -133,6 +133,137 @@ paths:
                 $ref: '#/components/schemas/RecipePreview'
         "404":
           description: recipeId is not exists
+
+
+
+/users/myRecipes:
+  get:
+    tags:
+    - Users
+    summary: Return the recipes that were saved by user in "My Recipes"
+    responses:
+      "200":
+        description: data about the user's myRecipes returned
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/RecipePreview'
+      "401":
+        description: user is not authorized
+    security:
+    - cookieAuth: []
+  post:
+    tags:
+    - Users
+    summary: save recipe in "My Recipes" list of a user
+    requestBody:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/FullRecipe'
+    responses:
+      "200":
+        description: The Recipe successfully added to "My Recipes"
+      "401":
+        description: user is not authorized
+    security:
+    - cookieAuth: []
+/users/familyRecipes:
+  get:
+    tags:
+    - Users
+    summary: Return the recipes that were saved by user in "Family Recipes"
+    responses:
+      "200":
+        description: data about the user's familyRecipes returned
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/FamilyRecipe'
+      "401":
+        description: user is not authorized
+    security:
+    - cookieAuth: []
+  post:
+    tags:
+    - Users
+    summary: Save a recipe in the "Family Recipes" list of a user
+    requestBody:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/FamilyRecipe'
+    responses:
+      "200":
+        description: The Recipe successfully added to "Family Recipes"
+      "401":
+        description: user is not authorized
+    security:
+    - cookieAuth: []
+/recipes/random:
+  get:
+    tags:
+    - Recipes
+    summary: Get 3 random recipes
+    responses:
+      "200":
+        description: 3 random recipes
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/RecipePreview'
+      "404":
+        description: No recipes found
+  /recipes/search:
+    get:
+      summary: Search for a recipe with optional filters
+      parameters:
+      - name: query
+        in: query
+        required: true
+        type: string
+        description: The name of the recipe/dish to search for
+      - name: cuisine
+        in: query
+        required: false
+        type: string
+        description: Optional cuisine type to filter results
+      - name: diet
+        in: query
+        required: false
+        type: string
+        description: Optional diet type to filter results
+      - name: intolerance
+        in: query
+        required: false
+        type: string
+        description: Optional intolerance to filter results
+      - name: number
+        in: query
+        required: false
+        type: integer
+        default: 5
+        description: Number of results to return (default is 5)
+      responses:
+        "200":
+          description: A list of matching recipes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RecipePreview'
+        "404":
+          description: No recipes found
+
+
+
 components:
   schemas:
     User:
@@ -227,4 +358,52 @@ components:
           type: boolean
           description: indication if the recipe is gluten free
           example: false
-  
+
+
+
+    FullRecipe:
+      allOf:
+        - $ref: '#/components/schemas/RecipePreview'
+        - type: object
+          properties:
+            ingredients:
+              type: array
+              items:
+                type: object
+                properties:
+                  name:
+                    type: string
+                    description: ingredient name
+                    example: cheese
+                  quantity:
+                    type: string
+                    description: ingredient quantity
+                    example: 200g
+            instructions:
+              type: string
+              description: preparation instructions
+              example: boil the water, then add the pasta
+            portions:
+              type: integer
+              description: the number of portions the recipe makes
+              example: 4
+    FamilyRecipe:
+      allOf:
+        - $ref: '#/components/schemas/FullRecipe'
+        - type: object
+          properties:
+            familyMember:
+              type: string
+              description: The family member who usually prepares the recipe
+              example: Grandma Emily
+            traditionalTime:
+              type: string
+              description: When it is customary to prepare this recipe in the family
+              example: Thanksgiving
+            images:
+              type: array
+              items:
+                type: string
+                description: URLs of images related to the recipe, could be of the food, the family member preparing it, or various stages of preparation
+                format: URL
+                example: https://spoonacular.com/recipeimages/655455-566x370.jpg

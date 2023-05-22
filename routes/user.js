@@ -54,5 +54,65 @@ router.get('/favorites', async (req,res,next) => {
 
 
 
+//NEW FUNCTIONS
+
+
+// For adding a recipe to "My Recipes"
+router.post('/myRecipes', async (req,res,next) => {
+  try{
+    const user_id = req.session.user_id;
+    const recipe_id = req.body.recipeId;
+    await user_utils.addToMyRecipes(user_id,recipe_id);
+    res.status(200).send("The Recipe successfully added to My Recipes");
+    } catch(error){
+    next(error);
+  }
+})
+
+// For getting recipes from "My Recipes"
+router.get('/myRecipes', async (req,res,next) => {
+  try{
+    const user_id = req.session.user_id;
+    const recipes_id = await user_utils.getMyRecipes(user_id);
+    let recipes_id_array = [];
+    recipes_id.map((element) => recipes_id_array.push(element.recipe_id));
+    const results = await recipe_utils.getRecipesPreview(recipes_id_array);
+    res.status(200).send(results);
+  } catch(error){
+    next(error); 
+  }
+});
+
+// For adding a recipe to "Family Recipes"
+router.post('/familyRecipes', async (req,res,next) => {
+  try{
+    const user_id = req.session.user_id;
+    const recipe_id = req.body.recipeId;
+    await user_utils.addToFamilyRecipes(user_id,recipe_id);
+    res.status(200).send("The Recipe successfully added to Family Recipes");
+    } catch(error){
+    next(error);
+  }
+})
+
+// For getting recipes from "Family Recipes"
+router.get('/familyRecipes', async (req,res,next) => {
+  try{
+    const user_id = req.session.user_id;
+    const recipes_id = await user_utils.getFamilyRecipes(user_id);
+    let recipes_id_array = [];
+    recipes_id.map((element) => recipes_id_array.push(element.recipe_id));
+    const results = await recipe_utils.getRecipesPreview(recipes_id_array);
+    res.status(200).send(results);
+  } catch(error){
+    next(error); 
+  }
+});
+
+
+
+//END OF NEW FUNCTIONS
+
+
 
 module.exports = router;
