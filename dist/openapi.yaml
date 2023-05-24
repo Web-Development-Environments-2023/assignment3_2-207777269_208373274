@@ -345,11 +345,11 @@ components:
           description: recipe image
           format: URL
           example: https://spoonacular.com/recipeimages/655455-566x370.jpg
-        readyInMinutes:
+        ready_in_minutes:
           type: integer
           description: the time takes to make this recipe
           example: 45
-        popularity:
+        aggregate_likes:
           type: integer
           description: how many likes got this recipe
           example: 5987
@@ -361,7 +361,7 @@ components:
           type: boolean
           description: indication if the recipe is vegan
           example: false
-        glutenFree:
+        gluten_free:
           type: boolean
           description: indication if the recipe is gluten free
           example: false

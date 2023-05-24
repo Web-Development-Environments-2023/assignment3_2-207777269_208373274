@@ -22,18 +22,17 @@ async function getRecipeInformation(recipe_id) {
 
 async function getRecipeDetails(recipe_id) {
     let recipe_info = await getRecipeInformation(recipe_id);
-    let { id, title, readyInMinutes, image, aggregateLikes, vegan, vegetarian, glutenFree } = recipe_info.data;
+    let { id, title, image, ready_in_minutes, aggregate_likes, vegetarian, vegan, gluten_free } = recipe_info.data;
 
     return {
         id: id,
         title: title,
-        readyInMinutes: readyInMinutes,
         image: image,
-        popularity: aggregateLikes,
-        vegan: vegan,
+        ready_in_minutes: ready_in_minutes,
+        aggregate_likes: aggregate_likes,
         vegetarian: vegetarian,
-        glutenFree: glutenFree,
-        
+        vegan: vegan,
+        gluten_free: gluten_free
     }
 }
 

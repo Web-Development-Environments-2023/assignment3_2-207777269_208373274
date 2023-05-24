@@ -4,14 +4,17 @@ const DButils = require("./utils/DButils");
 const user_utils = require("./utils/user_utils");
 const recipe_utils = require("./utils/recipes_utils");
 
+
+
+
 /**
  * Authenticate all incoming requests by middleware
  */
 router.use(async function (req, res, next) {
-  if (req.session && req.session.user_id) {
-    DButils.execQuery("SELECT user_id FROM users").then((users) => {
-      if (users.find((x) => x.user_id === req.session.user_id)) {
-        req.user_id = req.session.user_id;
+  if (req.session && req.session.username) {
+    DButils.execQuery("SELECT username FROM users").then((users) => {
+      if (users.find((x) => x.username === req.session.username)) {
+        req.username = req.session.username;
         next();
       }
     }).catch(err => next(err));
@@ -21,14 +24,16 @@ router.use(async function (req, res, next) {
 });
 
 
+
+
 /**
  * This path gets body with recipeId and save this recipe in the favorites list of the logged-in user
  */
-router.post('/favorites', async (req,res,next) => {
+router.post('/favorites', async (req, res, next) => {
   try{
-    const user_id = req.session.user_id;
+    const username = req.session.username;
     const recipe_id = req.body.recipeId;
-    await user_utils.markAsFavorite(user_id,recipe_id);
+    await user_utils.markAsFavorite(username, recipe_id);
     res.status(200).send("The Recipe successfully saved as favorite");
     } catch(error){
     next(error);
@@ -40,9 +45,9 @@ router.post('/favorites', async (req,res,next) => {
  */
 router.get('/favorites', async (req,res,next) => {
   try{
-    const user_id = req.session.user_id;
+    const username = req.session.username;
     let favorite_recipes = {};
-    const recipes_id = await user_utils.getFavoriteRecipes(user_id);
+    const recipes_id = await user_utils.getFavoriteRecipes(username);
     let recipes_id_array = [];
     recipes_id.map((element) => recipes_id_array.push(element.recipe_id)); //extracting the recipe ids into array
     const results = await recipe_utils.getRecipesPreview(recipes_id_array);
@@ -54,17 +59,26 @@ router.get('/favorites', async (req,res,next) => {
 
 
 
-//NEW FUNCTIONS
-
 
 // For adding a recipe to "My Recipes"
-router.post('/myRecipes', async (req,res,next) => {
+router.post('/myRecipes', async (req, res, next) => {
   try{
-    const user_id = req.session.user_id;
-    const recipe_id = req.body.recipeId;
-    await user_utils.addToMyRecipes(user_id,recipe_id);
+    const username = req.session.username;
+    let recipe_details = {
+      title: req.body.title,
+      image: req.body.image,
+      ready_in_minutes: req.body.ready_in_minutes,
+      vegetarian: req.body.vegetarian,
+      vegan: req.body.vegan,
+      gluten_free: req.body.gluten_free,
+      ingredients: req.body.ingredients,
+      instructions: req.body.instructions,
+      portions: req.body.portions
+    };
+
+    await user_utils.addToMyRecipes(username, recipe_details);
     res.status(200).send("The Recipe successfully added to My Recipes");
-    } catch(error){
+  } catch(error){
     next(error);
   }
 })
@@ -72,23 +86,23 @@ router.post('/myRecipes', async (req,res,next) => {
 // For getting recipes from "My Recipes"
 router.get('/myRecipes', async (req,res,next) => {
   try{
-    const user_id = req.session.user_id;
-    const recipes_id = await user_utils.getMyRecipes(user_id);
-    let recipes_id_array = [];
-    recipes_id.map((element) => recipes_id_array.push(element.recipe_id));
-    const results = await recipe_utils.getRecipesPreview(recipes_id_array);
+    const username = req.session.username;
+    const recipes_id = await user_utils.getMyRecipes(username);
     res.status(200).send(results);
   } catch(error){
     next(error); 
   }
 });
 
+
+
+
 // For adding a recipe to "Family Recipes"
-router.post('/familyRecipes', async (req,res,next) => {
+router.post('/familyRecipes', async (req, res, next) => {
   try{
-    const user_id = req.session.user_id;
+    const username = req.session.username;
     const recipe_id = req.body.recipeId;
-    await user_utils.addToFamilyRecipes(user_id,recipe_id);
+    await user_utils.addToFamilyRecipes(username, recipe_id);
     res.status(200).send("The Recipe successfully added to Family Recipes");
     } catch(error){
     next(error);
@@ -98,8 +112,8 @@ router.post('/familyRecipes', async (req,res,next) => {
 // For getting recipes from "Family Recipes"
 router.get('/familyRecipes', async (req,res,next) => {
   try{
-    const user_id = req.session.user_id;
-    const recipes_id = await user_utils.getFamilyRecipes(user_id);
+    const username = req.session.username;
+    const recipes_id = await user_utils.getFamilyRecipes(username);
     let recipes_id_array = [];
     recipes_id.map((element) => recipes_id_array.push(element.recipe_id));
     const results = await recipe_utils.getRecipesPreview(recipes_id_array);
@@ -109,9 +123,6 @@ router.get('/familyRecipes', async (req,res,next) => {
   }
 });
 
-
-
-//END OF NEW FUNCTIONS
 
 
 
