@@ -130,14 +130,14 @@ paths:
         '404':
           description: recipe_id is not exists
 
-  /users/my_recipes:
+  /users/user_recipes:
     get:
       tags:
       - users
-      summary: Return the recipes that were saved by user in My Recipes
+      summary: Return the recipes that were saved by user in "My Recipes"
       responses:
         '200':
-          description: data about the user's myRecipes returned
+          description: data about the user's recipes returned
           content:
             application/json:
               schema:
@@ -199,15 +199,46 @@ paths:
           description: user is not authorized
       security:
       - cookieAuth: []
+
+  /users/last_watched_recipes:
+    get:
+      tags:
+      - users
+      summary: Get X last watched recipes
+      parameters:
+      - name: number
+        in: query
+        required: true
+        schema:
+          type: number
+        description: The amount of last watched recipes to retrieve
+      responses:
+        '200':
+          description: X last watched recipes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RecipePreview'
+        '404':
+          description: No recipes found
       
   /recipes/random:
     get:
       tags:
       - recipes
-      summary: Get 3 random recipes
+      summary: Get X random recipes
+      parameters:
+      - name: number
+        in: query
+        required: true
+        schema:
+          type: number
+        description: The amount of random recipes to retrieve
       responses:
         '200':
-          description: 3 random recipes
+          description: X random recipes
           content:
             application/json:
               schema:

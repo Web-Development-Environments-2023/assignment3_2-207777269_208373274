@@ -4,25 +4,7 @@ const recipes_utils = require("./utils/recipes_utils");
 
 
 
-router.get("/", (req, res) => res.send("im here"));
 
-
-
-/**
- * This path returns a full details of a recipe by its id
- */
-router.get("/:recipeId", async (req, res, next) => {
-  try {
-    const recipe = await recipes_utils.getRecipeDetails(req.params.recipeId);
-    res.send(recipe);
-  } catch (error) {
-    next(error);
-  }
-});
-
-
-
-//NEW FUNCTIONS
 // For searching a recipe
 router.get("/search", async (req, res, next) => {
   try {
@@ -30,7 +12,7 @@ router.get("/search", async (req, res, next) => {
     const cuisine = req.query.cuisine;
     const diet = req.query.diet;
     const intolerance = req.query.intolerance;
-    const number = req.query.number || 5; // default is 5
+    const number = req.query.number || 5;
     const results = await recipes_utils.searchRecipe(recipeName, cuisine, diet, intolerance, number);
     req.session.lastSearch = results;
     res.send(results);
@@ -41,16 +23,36 @@ router.get("/search", async (req, res, next) => {
 
 
 
-// For getting 3 random recipes
+
+// For getting X random recipes
 router.get("/random", async (req, res, next) => {
-  try {
-    const recipes = await recipes_utils.getRandomRecipes();
-    res.send(recipes);
-  } catch (error) {
-    next(error);
-  }
+    try {
+        const amount = req.query.number;
+        const recipes = await recipes_utils.getRandomRecipes(amount);
+        res.send(recipes);
+    } catch (error) {
+        next(error);
+    }
 });
 
-//END OF NEW FUNCTIONS
+
+
+
+/**
+ * This path returns a full details of a recipe by its id
+ */
+router.get("/:recipeId", async (req, res, next) => {
+    try {
+        const recipe = await recipes_utils.getRecipeDetails(req.params.recipeId);
+        if(req.session.username)
+            recipes_utils.markAsSeen(req.session.username, req.params.recipeId);
+        res.send(recipe);
+    } catch (error) {
+        next(error);
+    }
+});
+
+
+
 
 module.exports = router;
