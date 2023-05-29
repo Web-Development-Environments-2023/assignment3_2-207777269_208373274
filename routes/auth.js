@@ -20,7 +20,7 @@ router.post("/Register", async (req, res, next) => {
       email: req.body.email,
     }
     let users = [];
-    users = await DButils.execQuery("SELECT username from users");
+    users = await DButils.execQuery("SELECT username from Users");
 
     if (users.find((x) => x.username === user_details.username))
       throw { status: 409, message: "Username taken" };
@@ -31,7 +31,9 @@ router.post("/Register", async (req, res, next) => {
       parseInt(process.env.bcrypt_saltRounds)
     );
     await DButils.execQuery(
-      `INSERT INTO users (username, firstname, lastname, country, password, email) VALUES ('${user_details.username}', '${user_details.firstname}', '${user_details.lastname}', '${user_details.country}', '${hash_password}', '${user_details.email}')`
+      `INSERT INTO Users (username, firstname, lastname, country, password, email) 
+      VALUES ('${user_details.username}', 's${user_details.firstname}', '${user_details.lastname}', 
+      '${user_details.country}', '${hash_password}', '${user_details.email}')`
     );
     res.status(201).send({ message: "user created", success: true });
   } catch (error) {
@@ -42,38 +44,40 @@ router.post("/Register", async (req, res, next) => {
 
 
 router.post("/Login", async (req, res, next) => {
-  try {
-    // check that username exists
-    const users = await DButils.execQuery("SELECT username FROM users");
-    if (!users.find((x) => x.username === req.body.username))
-      throw { status: 401, message: "Username or Password incorrect" };
+    try {
+        // check that user is not already logged in
+        if (typeof req.session.username !== 'undefined')
+            throw { status: 409, message: "A user is already logged in" };
+    
+        // check that username exists
+        const users = await DButils.execQuery("SELECT username FROM Users");
+        if (!users.find((x) => x.username === req.body.username))
+            throw { status: 401, message: "Username or Password incorrect" };
 
-    // check that the password is correct
-    const user = (
-      await DButils.execQuery(
-        `SELECT * FROM users WHERE username = '${req.body.username}'`
-      )
-    )[0];
+        // check that the password is correct
+        const user = (
+            await DButils.execQuery(`SELECT * FROM Users 
+                                     WHERE username = '${req.body.username}'`)
+        )[0];
 
-    if (!bcrypt.compareSync(req.body.password, user.password)) {
-      throw { status: 401, message: "Username or Password incorrect" };
+        if (!bcrypt.compareSync(req.body.password, user.password)) {
+            throw { status: 401, message: "Username or Password incorrect" };
+        }
+
+        // Set cookie
+        req.session.username = user.username;
+
+        // return cookie
+        res.status(200).send({ message: "login succeeded", success: true });
+    } catch (error) {
+        next(error);
     }
-
-    // Set cookie
-    req.session.username = user.username;
-
-
-    // return cookie
-    res.status(200).send({ message: "login succeeded", success: true });
-  } catch (error) {
-    next(error);
-  }
 });
 
 
 router.post("/Logout", function (req, res) {
-  req.session.reset(); // reset the session info --> send cookie when  req.session == undefined!!
-  res.send({ success: true, message: "logout succeeded" });
+    req.session.reset(); // reset the session info --> send cookie when  req.session == undefined!!
+    res.send({ success: true, message: "logout succeeded" });
 });
 
 
