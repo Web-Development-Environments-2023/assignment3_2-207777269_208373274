@@ -108,7 +108,7 @@ async function searchRecipe(recipeName, cuisine, diet, intolerance, number, user
         }
     });
 
-    return getRecipesPreview(response.data.results.map((element) => element.recipe_id), username);
+    return getRecipesPreview(response.data.results.map((element) => element.id), username);
 }
 
 
