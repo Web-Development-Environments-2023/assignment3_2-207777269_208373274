@@ -5,9 +5,16 @@ async function getUserFavoriteRecipes(username){
     return recipes_id;
 }
 
-async function addToUserFavorites(username, recipe_id){
-    await DButils.execQuery(`INSERT INTO UserFavoriteRecipes VALUES ('${username}',${recipe_id})`);
-}
+async function addToUserFavorites(username, recipe_id) {
+    try {
+      await DButils.execQuery(`INSERT INTO UserFavoriteRecipes VALUES ('${username}', ${recipe_id})`);
+    } catch (error) {
+        if (error.code === "ER_DUP_ENTRY"){
+            throw { status: 409, message: 'Recipe already exists in favorites' };
+        }
+      throw new Error('Failed to add the recipe to favorites');
+    }
+  }
 
 async function getUserRecipes(username) {
     const query = `SELECT R.recipe_id, R.title, R.image, R.ready_in_minutes, R.vegetarian, R.vegan, R.gluten_free
@@ -57,7 +64,7 @@ async function getRecipeFromUserRecipes(username, recipe_id) {
 
 async function getUserFamilyRecipes(username) {
     const query = `SELECT R.recipe_id, R.title, R.image, R.ready_in_minutes, R.vegetarian, R.vegan, R.gluten_free
-                   FROM UsersFamilyRecipes U
+                   FROM UserFamilyRecipes U
                    JOIN Recipes R ON U.recipe_id = R.recipe_id
                    WHERE U.username = '${username}'`;
     const recipes = await DButils.execQuery(query);
@@ -75,7 +82,7 @@ async function addToUserFamilyRecipes(username, recipe_details){
     let result = await DButils.execQuery(query);
     let recipeId = result[0].id;
 
-    query = `INSERT INTO UsersFamilyRecipes (username, recipe_id, family_member, traditional_time) 
+    query = `INSERT INTO UserFamilyRecipes (username, recipe_id, family_member, traditional_time) 
              VALUES ('${username}', ${recipeId}, '${recipe_details.family_member}', '${recipe_details.traditional_time}')`;
     await DButils.execQuery(query);
 
@@ -86,7 +93,7 @@ async function addToUserFamilyRecipes(username, recipe_details){
     }
 
     for(let image of recipe_details.images){
-        query = `INSERT INTO UsersFamilyRecipesImages (recipe_id, image_url) 
+        query = `INSERT INTO userfamilyrecipeimages (recipe_id, image_url) 
                     VALUES (${recipeId}, '${image.image_url}')`;
         await DButils.execQuery(query);
     }
