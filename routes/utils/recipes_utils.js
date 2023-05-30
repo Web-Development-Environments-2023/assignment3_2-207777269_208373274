@@ -5,21 +5,43 @@ const api_domain = "https://api.spoonacular.com/recipes";
 
 
 
-async function getRecipeInformation(recipe_id) {
-    return await axios.get(`${api_domain}/${recipe_id}/information`, {
-        params: {
-            includeNutrition: false,
-            apiKey: process.env.spooncular_apiKey
-        }
-    });
+async function getRecipeDetailsFromDb(recipe_id, username) {
+    let isSeen, isFavorite;
+    if(username) {
+        isSeen = false;
+        isFavorite = false;
+        const viewsQuery = `SELECT * FROM recipelastviews WHERE username = '${username}' AND recipe_id = ${recipe_id}`;
+        const recipeViews = await DButils.execQuery(viewsQuery);
+        if(recipeViews.length !== 0)
+            isSeen = true;
+
+        const favoritesQuery = `SELECT * FROM userfavoriterecipes WHERE username = '${username}' AND recipe_id = ${recipe_id}`;
+        const favoriteArray = await DButils.execQuery(favoritesQuery);
+        if(favoriteArray.length !== 0)
+            isFavorite = true;
+    }
+    return {isSeen:isSeen, isFavorite:isFavorite};
 }
 
 
 
 
-async function getRecipeDetails(recipe_id) {
-    let recipe_info = await getRecipeInformation(recipe_id);
-    let { id, title, readyInMinutes, image, aggregateLikes, vegan, vegetarian, glutenFree } = recipe_info.data;
+async function getRecipeInformation(recipe_id, username) {
+    let recipeResponse = await axios.get(`${api_domain}/${recipe_id}/information`, {
+        params: {
+            includeNutrition: false,
+            apiKey: process.env.spooncular_apiKey
+        }
+    });
+    return Object.assign(recipeResponse.data, await getRecipeDetailsFromDb(recipe_id, username));
+}
+
+
+
+
+async function getRecipePreviewDetails(recipeId, username) {
+    const recipeInfo = await getRecipeInformation(recipeId, username);
+    const { id, title, readyInMinutes, image, aggregateLikes, vegan, vegetarian, glutenFree, isSeen, isFavorite } = recipeInfo;
 
     return {
         id: id,
@@ -29,26 +51,52 @@ async function getRecipeDetails(recipe_id) {
         popularity: aggregateLikes,
         vegan: vegan,
         vegetarian: vegetarian,
-        glutenFree: glutenFree
+        glutenFree: glutenFree,
+        isSeen: isSeen,
+        isFavorite: isFavorite
     }
 }
 
 
 
 
-async function getRecipesPreview(recipes_id_array) {
-    let previews_array = [];
-    for(let recipeId of recipes_id_array){
-        previews_array.push(await getRecipeDetails(recipeId));
-    }
+async function getRecipeFullDetails(recipeId, username) {
+    const recipeInfo = await getRecipeInformation(recipeId, username);
+    const { id, title, readyInMinutes, image, aggregateLikes, vegan, vegetarian, glutenFree, instructions, extendedIngredients, servings, isSeen, isFavorite } = recipeInfo;
 
-    return previews_array;
+    return {
+        id: id,
+        title: title,
+        readyInMinutes: readyInMinutes,
+        image: image,
+        popularity: aggregateLikes,
+        vegan: vegan,
+        vegetarian: vegetarian,
+        glutenFree: glutenFree,
+        instructions: instructions,
+        ingredients: extendedIngredients,
+        portions: servings,
+        isSeen: isSeen,
+        isFavorite: isFavorite
+    }
 }
 
 
 
 
-async function searchRecipe(recipeName, cuisine, diet, intolerance, number) {
+async function getRecipesPreview(recipesIdArray, username) {
+    let previewsArray = [];
+    for(let recipeId of recipesIdArray){
+        previewsArray.push(await getRecipePreviewDetails(recipeId, username));
+    }
+
+    return previewsArray;
+}
+
+
+
+
+async function searchRecipe(recipeName, cuisine, diet, intolerance, number, username) {
     const response = await axios.get(`${api_domain}/complexSearch`, {
         params: {
             query: recipeName,
@@ -60,22 +108,25 @@ async function searchRecipe(recipeName, cuisine, diet, intolerance, number) {
         }
     });
 
-    return getRecipesPreview(response.data.results.map((element) => element.recipe_id));
+    return getRecipesPreview(response.data.results.map((element) => element.recipe_id), username);
 }
 
 
 
 
-async function getRandomRecipes(number) {
+async function getRandomRecipes(number, username) {
     const response = await axios.get(`${api_domain}/random`, {
         params: {
             number: number,
             apiKey: process.env.spooncular_apiKey
         }
     });
+
     let previews_array = [];
     for(let fullRecipe of response.data.recipes){
-        let { id, title, readyInMinutes, image, aggregateLikes, vegan, vegetarian, glutenFree } = fullRecipe;
+        const { id, title, readyInMinutes, image, aggregateLikes, vegan, vegetarian, glutenFree } = fullRecipe;
+        const { isSeen, isFavorite } = await getRecipeDetailsFromDb(id, username);
+
         previews_array.push({
             id: id,
             title: title,
@@ -84,9 +135,12 @@ async function getRandomRecipes(number) {
             popularity: aggregateLikes,
             vegan: vegan,
             vegetarian: vegetarian,
-            glutenFree: glutenFree
+            glutenFree: glutenFree,
+            isSeen: isSeen,
+            isFavorite: isFavorite
         });
     }
+
     return previews_array;
 }
 
@@ -104,7 +158,8 @@ async function markAsSeen(username, recipe_id){
 
 
 
-exports.getRecipeDetails = getRecipeDetails;
+exports.getRecipePreviewDetails = getRecipePreviewDetails;
+exports.getRecipeFullDetails = getRecipeFullDetails;
 exports.searchRecipe = searchRecipe;
 exports.getRandomRecipes = getRandomRecipes;
 exports.markAsSeen = markAsSeen;

@@ -1,15 +1,15 @@
 const DButils = require("./DButils");
 
-async function getFavoriteRecipes(username){
+async function getUserFavoriteRecipes(username){
     const recipes_id = await DButils.execQuery(`SELECT recipe_id FROM UserFavoriteRecipes WHERE username='${username}'`);
     return recipes_id;
 }
 
-async function addToFavorites(username, recipe_id){
+async function addToUserFavorites(username, recipe_id){
     await DButils.execQuery(`INSERT INTO UserFavoriteRecipes VALUES ('${username}',${recipe_id})`);
 }
 
-async function getMyRecipes(username) {
+async function getUserRecipes(username) {
     const query = `SELECT R.recipe_id, R.title, R.image, R.ready_in_minutes, R.vegetarian, R.vegan, R.gluten_free
                    FROM UserRecipes U
                    JOIN Recipes R ON U.recipe_id = R.recipe_id
@@ -18,7 +18,7 @@ async function getMyRecipes(username) {
     return recipes;
 }
 
-async function addToMyRecipes(username, recipe_details){
+async function addToUserRecipes(username, recipe_details){
     let query = `INSERT INTO Recipes (title, image, ready_in_minutes, vegetarian, vegan, gluten_free, instructions, portions) 
                  VALUES ('${recipe_details.title}', '${recipe_details.image}', ${recipe_details.ready_in_minutes}, 
                           ${recipe_details.vegetarian}, ${recipe_details.vegan}, ${recipe_details.gluten_free}, 
@@ -39,19 +39,23 @@ async function addToMyRecipes(username, recipe_details){
     }
 }
 
-async function getRecipeFromMyRecipes(username, recipe_id) {
-    const query = `
-        SELECT R.recipe_id, R.title, R.image, R.ready_in_minutes, R.vegetarian, R.vegan, R.gluten_free, 
-               RI.ingredient_name, RI.quantity AS ingredient_quantity
+async function getRecipeFromUserRecipes(username, recipe_id) {
+    const recipeQuery = `
+        SELECT R.recipe_id, R.title, R.image, R.ready_in_minutes, R.vegetarian, R.vegan, R.gluten_free, R.instructions, R.portions
         FROM UserRecipes U
         JOIN Recipes R ON U.recipe_id = R.recipe_id
-        JOIN RecipeIngredients RI ON R.recipe_id = RI.recipe_id
         WHERE U.username = '${username}' AND U.recipe_id = ${recipe_id}`;
-    const recipe = await DButils.execQuery(query);
-    return recipe;
+    const recipe = await DButils.execQuery(recipeQuery);
+    if(recipe.length === 0)
+        throw { status: 404, message: "User recipe not found" };
+
+    const ingredientsQuery = `SELECT ingredient_name, quantity FROM recipeingredients WHERE recipe_id = ${recipe_id}`;
+    const ingredientsArray = await DButils.execQuery(ingredientsQuery);
+
+    return Object.assign(recipe[0], {ingredients:ingredientsArray});
 }
 
-async function getFamilyRecipes(username) {
+async function getUserFamilyRecipes(username) {
     const query = `SELECT R.recipe_id, R.title, R.image, R.ready_in_minutes, R.vegetarian, R.vegan, R.gluten_free
                    FROM UsersFamilyRecipes U
                    JOIN Recipes R ON U.recipe_id = R.recipe_id
@@ -60,7 +64,7 @@ async function getFamilyRecipes(username) {
     return recipes;
 }
 
-async function addToFamilyRecipes(username, recipe_details){
+async function addToUserFamilyRecipes(username, recipe_details){
     let query = `INSERT INTO Recipes (title, image, ready_in_minutes, vegetarian, vegan, gluten_free, instructions, portions) 
                  VALUES ('${recipe_details.title}', '${recipe_details.image}', ${recipe_details.ready_in_minutes}, 
                           ${recipe_details.vegetarian}, ${recipe_details.vegan}, ${recipe_details.gluten_free}, 
@@ -88,17 +92,23 @@ async function addToFamilyRecipes(username, recipe_details){
     }
 }
 
-async function getRecipeFromFamilyRecipes(username, recipe_id) {
-    const query = `
-        SELECT R.recipe_id, R.title, R.image, R.ready_in_minutes, R.vegetarian, R.vegan, R.gluten_free, 
-               RI.ingredient_name, RI.quantity AS ingredient_quantity, U.family_member, U.traditional_time, UI.image_url
-        FROM UsersFamilyRecipes U
-        JOIN Recipes R ON U.recipe_id = R.recipe_id
-        JOIN RecipeIngredients RI ON R.recipe_id = RI.recipe_id
-        JOIN UsersFamilyRecipesImages UI ON R.recipe_id = UI.recipe_id
-        WHERE U.username = '${username}' AND U.recipe_id = ${recipe_id}`;
-    const recipe = await DButils.execQuery(query);
-    return recipe;
+async function getRecipeFromUserFamilyRecipes(username, recipe_id) {
+    const recipeQuery = `
+        SELECT R.recipe_id, R.title, R.image, R.ready_in_minutes, R.vegetarian, R.vegan, R.gluten_free, R.instructions, R.portions, F.family_member, F.traditional_time
+        FROM UserFamilyRecipes F
+        JOIN Recipes R ON F.recipe_id = R.recipe_id
+        WHERE F.username = '${username}' AND F.recipe_id = ${recipe_id}`;
+    const recipe = await DButils.execQuery(recipeQuery);
+    if(recipe.length === 0)
+        throw { status: 404, message: "Family recipe not found" };
+
+    const ingredientsQuery = `SELECT ingredient_name, quantity FROM recipeingredients WHERE recipe_id = ${recipe_id}`;
+    const ingredientsArray = await DButils.execQuery(ingredientsQuery);
+
+    const imagesQuery = `SELECT image_url FROM userfamilyrecipeimages WHERE recipe_id = ${recipe_id}`;
+    const imagesArray = await DButils.execQuery(imagesQuery);
+
+    return Object.assign(recipe[0], {ingredients:ingredientsArray}, {images:imagesArray});
 }
 
 async function getLastWatchedRecipes(username, amountToRetrieve){
@@ -112,15 +122,15 @@ async function getLastWatchedRecipes(username, amountToRetrieve){
     return recipes_id;
 }
 
-exports.getFavoriteRecipes = getFavoriteRecipes;
-exports.addToFavorites = addToFavorites;
+exports.getUserFavoriteRecipes = getUserFavoriteRecipes;
+exports.addToUserFavorites = addToUserFavorites;
 
-exports.getMyRecipes = getMyRecipes;
-exports.addToMyRecipes = addToMyRecipes;
-exports.getRecipeFromMyRecipes = getRecipeFromMyRecipes;
+exports.getUserRecipes = getUserRecipes;
+exports.addToUserRecipes = addToUserRecipes;
+exports.getRecipeFromUserRecipes = getRecipeFromUserRecipes;
 
-exports.getFamilyRecipes = getFamilyRecipes;
-exports.addToFamilyRecipes = addToFamilyRecipes;
-exports.getRecipeFromFamilyRecipes = getRecipeFromFamilyRecipes;
+exports.getUserFamilyRecipes = getUserFamilyRecipes;
+exports.addToUserFamilyRecipes = addToUserFamilyRecipes;
+exports.getRecipeFromUserFamilyRecipes = getRecipeFromUserFamilyRecipes;
 
 exports.getLastWatchedRecipes = getLastWatchedRecipes;

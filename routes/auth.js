@@ -46,7 +46,7 @@ router.post("/Register", async (req, res, next) => {
 router.post("/Login", async (req, res, next) => {
     try {
         // check that user is not already logged in
-        if (typeof req.session.username !== 'undefined')
+        if (req.session.username)
             throw { status: 409, message: "A user is already logged in" };
     
         // check that username exists
