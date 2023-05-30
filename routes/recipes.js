@@ -14,14 +14,11 @@ router.get("/search", async (req, res, next) => {
     const intolerance = req.query.intolerance;
     const number = req.query.number || 5;
     const results = await recipes_utils.searchRecipe(recipeName, cuisine, diet, intolerance, number);
-    req.session.lastSearch = results;
     res.send(results);
   } catch (error) {
     next(error);
   }
 });
-
-
 
 
 // For getting X random recipes
@@ -34,8 +31,6 @@ router.get("/random", async (req, res, next) => {
         next(error);
     }
 });
-
-
 
 
 /**
