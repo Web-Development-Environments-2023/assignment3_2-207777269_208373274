@@ -467,7 +467,7 @@ components:
           description: indication if the recipe is gluten free
           example: false
           readOnly: true
-        is_favorites:
+        is_favorite:
           type: boolean
           description: indication if the recipe is gluten free
           example: false
