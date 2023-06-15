@@ -46,14 +46,14 @@ async function getRecipePreviewDetails(recipeId, username) {
     return {
         id: id,
         title: title,
-        readyInMinutes: readyInMinutes,
+        ready_in_minutes: readyInMinutes,
         image: image,
-        popularity: aggregateLikes,
+        aggregate_likes: aggregateLikes,
         vegan: vegan,
         vegetarian: vegetarian,
-        glutenFree: glutenFree,
-        isSeen: isSeen,
-        isFavorite: isFavorite
+        gluten_free: glutenFree,
+        is_seen: isSeen,
+        is_favorite: isFavorite
     }
 }
 
@@ -67,17 +67,17 @@ async function getRecipeFullDetails(recipeId, username) {
     return {
         id: id,
         title: title,
-        readyInMinutes: readyInMinutes,
+        ready_in_minutes: readyInMinutes,
         image: image,
-        popularity: aggregateLikes,
+        aggregate_likes: aggregateLikes,
         vegan: vegan,
         vegetarian: vegetarian,
-        glutenFree: glutenFree,
+        gluten_free: glutenFree,
         instructions: instructions,
         ingredients: extendedIngredients,
         portions: servings,
-        isSeen: isSeen,
-        isFavorite: isFavorite
+        is_seen: isSeen,
+        is_favorite: isFavorite
     }
 }
 
@@ -132,12 +132,12 @@ async function getRandomRecipes(number, username) {
             title: title,
             readyInMinutes: readyInMinutes,
             image: image,
-            popularity: aggregateLikes,
+            aggregate_likes: aggregateLikes,
             vegan: vegan,
             vegetarian: vegetarian,
-            glutenFree: glutenFree,
-            isSeen: isSeen,
-            isFavorite: isFavorite
+            gluten_free: glutenFree,
+            is_seen: isSeen,
+            is_favorite: isFavorite
         });
     }
 
