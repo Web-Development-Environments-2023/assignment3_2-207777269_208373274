@@ -41,10 +41,10 @@ async function getRecipeInformation(recipe_id, username) {
 
 async function getRecipePreviewDetails(recipeId, username) {
     const recipeInfo = await getRecipeInformation(recipeId, username);
-    const { id, title, readyInMinutes, image, aggregateLikes, vegan, vegetarian, glutenFree, isSeen, isFavorite } = recipeInfo;
+    const { id, title, readyInMinutes, image, aggregateLikes, vegan, vegetarian, glutenFree, isSeen, isFavorite, summary } = recipeInfo;
 
     return {
-        id: id,
+        recipe_id: id,
         title: title,
         ready_in_minutes: readyInMinutes,
         image: image,
@@ -53,7 +53,8 @@ async function getRecipePreviewDetails(recipeId, username) {
         vegetarian: vegetarian,
         gluten_free: glutenFree,
         is_seen: isSeen,
-        is_favorite: isFavorite
+        is_favorite: isFavorite,
+        summary: summary
     }
 }
 
@@ -62,10 +63,10 @@ async function getRecipePreviewDetails(recipeId, username) {
 
 async function getRecipeFullDetails(recipeId, username) {
     const recipeInfo = await getRecipeInformation(recipeId, username);
-    const { id, title, readyInMinutes, image, aggregateLikes, vegan, vegetarian, glutenFree, instructions, extendedIngredients, servings, isSeen, isFavorite } = recipeInfo;
+    const { id, title, readyInMinutes, image, aggregateLikes, vegan, vegetarian, glutenFree, instructions,analyzedInstructions, extendedIngredients, servings, isSeen, isFavorite,summary } = recipeInfo;
 
     return {
-        id: id,
+        recipe_id: id,
         title: title,
         ready_in_minutes: readyInMinutes,
         image: image,
@@ -73,11 +74,13 @@ async function getRecipeFullDetails(recipeId, username) {
         vegan: vegan,
         vegetarian: vegetarian,
         gluten_free: glutenFree,
+        analyzed_instructions: analyzedInstructions,
         instructions: instructions,
-        ingredients: extendedIngredients,
+        extended_ingredients: extendedIngredients,
         portions: servings,
         is_seen: isSeen,
-        is_favorite: isFavorite
+        is_favorite: isFavorite,
+        summary: summary
     }
 }
 
@@ -124,20 +127,21 @@ async function getRandomRecipes(number, username) {
 
     let previews_array = [];
     for(let fullRecipe of response.data.recipes){
-        const { id, title, readyInMinutes, image, aggregateLikes, vegan, vegetarian, glutenFree } = fullRecipe;
+        const { id, title, readyInMinutes, image, aggregateLikes, vegan, vegetarian, glutenFree, summary } = fullRecipe;
         const { isSeen, isFavorite } = await getRecipeDetailsFromDb(id, username);
 
         previews_array.push({
-            id: id,
+            recipe_id: id,
             title: title,
-            readyInMinutes: readyInMinutes,
+            ready_in_minutes: readyInMinutes,
             image: image,
             aggregate_likes: aggregateLikes,
             vegan: vegan,
             vegetarian: vegetarian,
             gluten_free: glutenFree,
             is_seen: isSeen,
-            is_favorite: isFavorite
+            is_favorite: isFavorite,
+            summary: summary
         });
     }
 

@@ -478,7 +478,7 @@ components:
         - $ref: '#/components/schemas/RecipePreview'
         - type: object
           properties:
-            ingredients:
+            extended_ingredients:
               type: array
               items:
                 type: object
@@ -495,6 +495,9 @@ components:
               type: string
               description: preparation instructions
               example: boil the water, then add the pasta
+            analyzed_instructions:
+              type: array
+              items: string
             portions:
               type: integer
               description: the number of portions the recipe makes
