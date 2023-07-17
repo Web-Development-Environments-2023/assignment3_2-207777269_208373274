@@ -24,8 +24,6 @@ router.use(async function (req, res, next) {
 });
 
 
-
-
 /**
  * This path returns the favorites recipes that were saved by the logged-in user
  */
@@ -58,10 +56,21 @@ router.post('/favorites', async (req, res, next) => {
 
 
 
+router.get("/user_recipes/:recipe_id", async (req, res, next) => {
+    try {
+      const recipe = await user_utils.getRecipeFromUserRecipes(req.session.username, req.params.recipe_id);
+      // if(req.session.username)
+      //     recipe_utils.markAsSeen(req.session.username, req.params.recipe_id);
+      res.send(recipe);
+  } catch (error) {
+      next(error);
+  }
+});
+
 
 // For getting recipes from "My Recipes"
 router.get('/user_recipes', async (req,res,next) => {
-  try{
+    try{
     const username = req.session.username;
     const myRecipePreview = await user_utils.getUserRecipes(username);
     res.status(200).send(myRecipePreview);
@@ -70,9 +79,10 @@ router.get('/user_recipes', async (req,res,next) => {
   }
 });
 
+
 // For adding a recipe to "My Recipes"
 router.post('/user_recipes', async (req, res, next) => {
-  try{
+    try{
     const username = req.session.username;
     let recipe_details = {
       title: req.body.title,
@@ -93,16 +103,7 @@ router.post('/user_recipes', async (req, res, next) => {
   }
 })
 
-router.get("/user_recipes/:recipe_id", async (req, res, next) => {
-  try {
-      const recipe = await user_utils.getRecipeFromUserRecipes(req.session.username, req.params.recipe_id);
-      // if(req.session.username)
-      //     recipe_utils.markAsSeen(req.session.username, req.params.recipe_id);
-      res.send(recipe);
-  } catch (error) {
-      next(error);
-  }
-});
+
 
 
 
