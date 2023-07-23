@@ -18,7 +18,9 @@ app.use(
     duration: 24 * 60 * 60 * 1000, // expired after 20 sec
     activeDuration: 1000 * 60 * 5, // if expiresIn < activeDuration,
     cookie: {
-      httpOnly: false,
+      httpOnly: true,
+      secure: true,
+      sameSite: "strict"
     }
     //the session will be extended by activeDuration milliseconds
   })
@@ -30,11 +32,11 @@ app.use(express.static(path.join(__dirname, "public"))); //To serve static files
 //local:
 // app.use(express.static(path.join(__dirname, "dist")));
 //remote:
-app.use(express.static(path.join(__dirname, '../assignment-3-3-basic/dist')));
+app.use(express.static(path.join(__dirname, '../assignment3_3-207777269_208373274/dist')));
 app.get("/",function(req,res)
 { 
   //remote: 
-  res.sendFile(path.join(__dirname, '../assignment-3-3-basic/dist/index.html'));
+  res.sendFile(path.join(__dirname, '../assignment3_3-207777269_208373274/dist/index.html'));
   //local:
   // res.sendFile(__dirname+"/index.html");
 
@@ -42,7 +44,7 @@ app.get("/",function(req,res)
 
 
 const corsConfig = {
-  origin: true,
+  origin: "https://schwartz-kravchik.cs.bgu.ac.il",
   credentials: true
 };
 
