@@ -18,38 +18,42 @@ app.use(
     duration: 24 * 60 * 60 * 1000, // expired after 20 sec
     activeDuration: 1000 * 60 * 5, // if expiresIn < activeDuration,
     cookie: {
-      httpOnly: false,
+      httpOnly: true,
+      secure: true,
+      sameSite: "strict"
     }
     //the session will be extended by activeDuration milliseconds
   })
 );
+// app.use(cors({ credentials: true }));
+
 app.use(express.urlencoded({ extended: false })); // parse application/x-www-form-urlencoded
 app.use(express.static(path.join(__dirname, "public"))); //To serve static files such as images, CSS files, and JavaScript files
 //local:
-app.use(express.static(path.join(__dirname, "dist")));
+// app.use(express.static(path.join(__dirname, "dist")));
 //remote:
-// app.use(express.static(path.join(__dirname, '../assignment-3-3-basic/dist')));
+app.use(express.static(path.join(__dirname, '../assignment3_3-207777269_208373274/dist')));
 app.get("/",function(req,res)
 { 
   //remote: 
-  // res.sendFile(path.join(__dirname, '../assignment-3-3-basic/dist/index.html'));
+  res.sendFile(path.join(__dirname, '../assignment3_3-207777269_208373274/dist/index.html'));
   //local:
-  res.sendFile(__dirname+"/index.html");
+  // res.sendFile(__dirname+"/index.html");
 
 });
 
-// app.use(cors());
-// app.options("*", cors());
 
 const corsConfig = {
-  origin: true,
+  origin: "https://schwartz-kravchik.cs.bgu.ac.il",
   credentials: true
 };
+
 
 app.use(cors(corsConfig));
 app.options("*", cors(corsConfig));
 
-var port = process.env.PORT || "80"; //local=3000 remote=80
+
+var port = process.env.PORT || 80; //local=3000 remote=80
 //#endregion
 const user = require("./routes/user");
 const recipes = require("./routes/recipes");
@@ -58,11 +62,11 @@ const auth = require("./routes/auth");
 
 //#region cookie middleware
 app.use(function (req, res, next) {
-  if (req.session && req.session.user_id) {
-    DButils.execQuery("SELECT user_id FROM users")
+  if (req.session && req.session.username) {
+    DButils.execQuery("SELECT username FROM users")
       .then((users) => {
-        if (users.find((x) => x.user_id === req.session.user_id)) {
-          req.user_id = req.session.user_id;
+        if (users.find((x) => x.username === req.session.username)) {
+          req.username = req.session.username;
         }
         next();
       })
@@ -73,13 +77,16 @@ app.use(function (req, res, next) {
 });
 //#endregion
 
+
 // ----> For cheking that our server is alive
 app.get("/alive", (req, res) => res.send("I'm alive"));
+
 
 // Routings
 app.use("/users", user);
 app.use("/recipes", recipes);
 app.use(auth);
+
 
 // Default router
 app.use(function (err, req, res, next) {
@@ -88,14 +95,16 @@ app.use(function (err, req, res, next) {
 });
 
 
+// const server = app.listen(port, () => {
+//   console.log(`Server listen on port ${port}`);
+// });
 
-const server = app.listen(port, () => {
-  console.log(`Server listen on port ${port}`);
-});
 
-process.on("SIGINT", function () {
-  if (server) {
-    server.close(() => console.log("server closed"));
-  }
-  process.exit();
-});
+// process.on("SIGINT", function () {
+//   if (server) {
+//     server.close(() => console.log("server closed"));
+//   }
+//   process.exit();
+// });
+
+module.exports = app;
